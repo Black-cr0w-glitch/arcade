@@ -1,1 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Games Hub</title>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+    :root {
+        --bg1: #6a5acd;
+        --bg2: #00bcd4;
+        --text: #fff;
+        --card: rgba(255,255,255,0.15);
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, var(--bg1), var(--bg2));
+        background-size: 200% 200%;
+        animation: bgmove 12s ease infinite;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--text);
+    }
+
+    @keyframes bgmove {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .container {
+        background: var(--card);
+        backdrop-filter: blur(15px);
+        padding: 25px;
+        border-radius: 20px;
+        text-align: center;
+        width: 90%;
+        max-width: 450px;
+        animation: fadeIn 0.7s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    button.main {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.2rem;
+        border: none;
+        border-radius: 12px;
+        background: #fff;
+        color: #333;
+        margin-top: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+        transition: transform 0.2s, background 0.3s;
+    }
+
+    button.main:hover {
+        transform: scale(1.03);
+        background: #f2f2f2;
+    }
+
+    /* Reaction Game */
+    #reactionGame {
+        display: none;
+    }
+
+    #reactionScreen {
+        height: 200px;
+        background: #333;
+        color: white;
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        margin-top: 20px;
+        transition: background 0.3s;
+    }
+</style>
+</head>
+<body>
+
+<div class="container" id="menu">
+    <h1>Mini Games Hub 🎮</h1>
+    <p>Choose a game to play!</p>
+
+    <button class="main" onclick="openReaction()">⚡ Reaction Time Test</button>
+    <button class="main" disabled>🔒 More games coming…</button>
+</div>
+
+<!-- Reaction Time Game -->
+<div class="container" id="reactionGame">
+    <h2>Reaction Time Test ⚡</h2>
+    <p>Tap when the box turns green!</p>
+
+    <div id="reactionScreen">Tap to Start</div>
+
+    <button class="main" onclick="backToMenu()">⬅ Back to Menu</button>
+</div>
+
+<script>
+/* ---------------------
+   MENU NAVIGATION
+----------------------*/
+function openReaction() {
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("reactionGame").style.display = "block";
+}
+
+function backToMenu() {
+    document.getElementById("reactionGame").style.display = "none";
+    document.getElementById("menu").style.display = "block";
+}
+
+/* ---------------------
+   REACTION TIME GAME
+----------------------*/
+let reactionScreen = document.getElementById("reactionScreen");
+let waiting = false;
+let startTime = 0;
+
+reactionScreen.addEventListener("click", () => {
+    if (!waiting) {
+        // Start waiting for green
+        reactionScreen.style.background = "#b52727";
+        reactionScreen.textContent = "Wait...";
+        waiting = true;
+
+        let delay = Math.random() * 2000 + 1000;
+
+        setTimeout(() => {
+            reactionScreen.style.background = "#27b54a";
+            reactionScreen.textContent = "TAP!";
+            startTime = Date.now();
+
+            if (navigator.vibrate) navigator.vibrate(60);
+        }, delay);
+
+    } else {
+        // Tap response
+        let reaction = Date.now() - startTime;
+
+        if (reaction < 50) {
+            reactionScreen.textContent = "Too soon!";
+            reactionScreen.style.background = "#b52727";
+        } else {
+            reactionScreen.textContent = `Your time: ${reaction} ms`;
+            reactionScreen.style.background = "#222";
+        }
+
+        waiting = false;
+    }
+});
+</script>
+
+</body>
+</html>
 
