@@ -71,12 +71,11 @@
         background: #f2f2f2;
     }
 
-    /* Reaction Game */
-    #reactionGame, #tapGame, #guessGame {
+    #reactionGame, #tapGame, #guessGame, #memoryGame {
         display: none;
     }
 
-    #reactionScreen, #tapScreen, #guessScreen {
+    #reactionScreen, #tapScreen, #guessScreen, #memoryScreen {
         height: 200px;
         background: #333;
         color: white;
@@ -119,6 +118,24 @@
         text-align: center;
     }
 
+    #memoryGrid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .memorySquare {
+        height: 80px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: transform 0.2s, opacity 0.2s;
+    }
+
+    .memorySquare:active {
+        transform: scale(0.9);
+    }
+
     .info {
         margin-top: 10px;
     }
@@ -134,6 +151,7 @@
     <button class="main" onclick="openReaction()">⚡ Reaction Time Test</button>
     <button class="main" onclick="openTap()">🔥 Tap Challenge</button>
     <button class="main" onclick="openGuess()">❓ Guess the Number</button>
+    <button class="main" onclick="openMemory()">🟩 Memory Squares</button>
     <button class="main" disabled>🔒 More games coming…</button>
 </div>
 
@@ -141,7 +159,6 @@
 <div class="container" id="reactionGame">
     <h2>Reaction Time Test ⚡</h2>
     <p>Tap when the box turns green!</p>
-
     <div id="reactionScreen">Tap to Start</div>
     <button class="main" onclick="backToMenu()">⬅ Back to Menu</button>
 </div>
@@ -150,10 +167,8 @@
 <div class="container" id="tapGame">
     <h2>Tap Challenge 🔥</h2>
     <p>Tap the green button as many times as you can in 10 seconds!</p>
-
     <div id="tapScreen">Time: 10s | Score: 0</div>
     <button id="tapButton">TAP!</button>
-
     <div class="info" id="highScore">High Score: 0</div>
     <button class="main" onclick="backToMenu()">⬅ Back to Menu</button>
 </div>
@@ -162,7 +177,6 @@
 <div class="container" id="guessGame">
     <h2>Guess the Number ❓</h2>
     <p>Guess a number between 1 and 100!</p>
-
     <div id="guessScreen">Enter your guess:</div>
     <input type="number" id="guessInput" min="1" max="100">
     <button class="main" onclick="submitGuess()">Submit Guess</button>
@@ -170,150 +184,119 @@
     <button class="main" onclick="backToMenu()">⬅ Back to Menu</button>
 </div>
 
+<!-- MEMORY SQUARES GAME -->
+<div class="container" id="memoryGame">
+    <h2>Memory Squares 🟩</h2>
+    <p>Repeat the color sequence!</p>
+    <div id="memoryScreen">
+        <div id="memoryGrid"></div>
+        <div class="info" id="memoryInfo">Score: 0</div>
+    </div>
+    <button class="main" onclick="backToMenu()">⬅ Back to Menu</button>
+</div>
+
 <script>
-/* ---------------------
-   MENU NAVIGATION
-----------------------*/
-function openReaction() {
-    document.getElementById("menu").style.display = "none";
-    document.getElementById("reactionGame").style.display = "block";
+/* --------------------- MENU NAVIGATION ----------------------*/
+function openReaction(){showGame("reactionGame")}
+function openTap(){showGame("tapGame"); resetTapGame();}
+function openGuess(){showGame("guessGame"); resetGuessGame();}
+function openMemory(){showGame("memoryGame"); resetMemory();}
+function showGame(id){
+    document.getElementById("reactionGame").style.display="none";
+    document.getElementById("tapGame").style.display="none";
+    document.getElementById("guessGame").style.display="none";
+    document.getElementById("memoryGame").style.display="none";
+    document.getElementById("menu").style.display="none";
+    document.getElementById(id).style.display="block";
+}
+function backToMenu(){
+    document.getElementById("reactionGame").style.display="none";
+    document.getElementById("tapGame").style.display="none";
+    document.getElementById("guessGame").style.display="none";
+    document.getElementById("memoryGame").style.display="none";
+    document.getElementById("menu").style.display="block";
 }
 
-function openTap() {
-    document.getElementById("menu").style.display = "none";
-    document.getElementById("tapGame").style.display = "block";
-    resetTapGame();
-}
-
-function openGuess() {
-    document.getElementById("menu").style.display = "none";
-    document.getElementById("guessGame").style.display = "block";
-    resetGuessGame();
-}
-
-function backToMenu() {
-    document.getElementById("reactionGame").style.display = "none";
-    document.getElementById("tapGame").style.display = "none";
-    document.getElementById("guessGame").style.display = "none";
-    document.getElementById("menu").style.display = "block";
-}
-
-/* ---------------------
-   REACTION TIME GAME
-----------------------*/
-let reactionScreen = document.getElementById("reactionScreen");
-let waiting = false;
-let startTime = 0;
-
-reactionScreen.addEventListener("click", () => {
-    if (!waiting) {
-        reactionScreen.style.background = "#b52727";
-        reactionScreen.textContent = "Wait...";
-        waiting = true;
-
-        let delay = Math.random() * 2000 + 1000;
-
-        setTimeout(() => {
-            reactionScreen.style.background = "#27b54a";
-            reactionScreen.textContent = "TAP!";
-            startTime = Date.now();
-            if (navigator.vibrate) navigator.vibrate(60);
-        }, delay);
-
+/* --------------------- REACTION TIME GAME ----------------------*/
+let reactionScreen=document.getElementById("reactionScreen"), waiting=false, startTime=0;
+reactionScreen.addEventListener("click",()=>{
+    if(!waiting){
+        reactionScreen.style.background="#b52727"; reactionScreen.textContent="Wait..."; waiting=true;
+        let delay=Math.random()*2000+1000;
+        setTimeout(()=>{
+            reactionScreen.style.background="#27b54a"; reactionScreen.textContent="TAP!"; startTime=Date.now();
+            navigator.vibrate&&navigator.vibrate(60);
+        },delay);
     } else {
-        let reaction = Date.now() - startTime;
-        if (reaction < 50) {
-            reactionScreen.textContent = "Too soon!";
-            reactionScreen.style.background = "#b52727";
-        } else {
-            reactionScreen.textContent = `Your time: ${reaction} ms`;
-            reactionScreen.style.background = "#222";
-        }
-        waiting = false;
+        let reaction=Date.now()-startTime;
+        if(reaction<50){reactionScreen.textContent="Too soon!"; reactionScreen.style.background="#b52727";}
+        else {reactionScreen.textContent=`Your time: ${reaction} ms`; reactionScreen.style.background="#222";}
+        waiting=false;
     }
 });
 
-/* ---------------------
-   TAP CHALLENGE GAME
-----------------------*/
-let tapButton = document.getElementById("tapButton");
-let tapScreen = document.getElementById("tapScreen");
-let highScoreBox = document.getElementById("highScore");
-
-let tapScore = 0;
-let tapTime = 10;
-let tapInterval;
-let gameRunning = false;
-let highScore = 0;
-
-function resetTapGame() {
-    tapScore = 0;
-    tapTime = 10;
-    gameRunning = false;
-    tapScreen.textContent = `Time: 10s | Score: 0`;
-}
-
-tapButton.addEventListener("click", () => {
-    if (!gameRunning) startTapGame();
-
-    tapScore++;
-    tapScreen.textContent = `Time: ${tapTime}s | Score: ${tapScore}`;
-    if (navigator.vibrate) navigator.vibrate(20);
+/* --------------------- TAP CHALLENGE ----------------------*/
+let tapButton=document.getElementById("tapButton"), tapScreen=document.getElementById("tapScreen"), highScoreBox=document.getElementById("highScore");
+let tapScore=0,tapTime=10,tapInterval,gameRunning=false,highScore=0;
+function resetTapGame(){tapScore=0; tapTime=10; gameRunning=false; tapScreen.textContent=`Time: 10s | Score: 0`;}
+tapButton.addEventListener("click",()=>{
+    if(!gameRunning) startTapGame();
+    tapScore++; tapScreen.textContent=`Time: ${tapTime}s | Score: ${tapScore}`; navigator.vibrate&&navigator.vibrate(20);
 });
-
-function startTapGame() {
-    gameRunning = true;
-    tapInterval = setInterval(() => {
-        tapTime -= 1;
-        tapScreen.textContent = `Time: ${tapTime}s | Score: ${tapScore}`;
-
-        if (tapTime <= 0) {
-            clearInterval(tapInterval);
-            gameRunning = false;
-            tapScreen.textContent = `Time's up! Final Score: ${tapScore}`;
-            if (tapScore > highScore) {
-                highScore = tapScore;
-                highScoreBox.textContent = `High Score: ${highScore}`;
-            }
-        }
-    }, 1000);
-}
-
-/* ---------------------
-   GUESS THE NUMBER GAME
-----------------------*/
-let targetNumber = 0;
-let attempts = 0;
-
-function resetGuessGame() {
-    targetNumber = Math.floor(Math.random() * 100) + 1;
-    attempts = 0;
-    document.getElementById("guessScreen").textContent = "Enter your guess:";
-    document.getElementById("guessInfo").textContent = `Attempts: 0`;
-    document.getElementById("guessInput").value = '';
-}
-
-function submitGuess() {
-    let guess = Number(document.getElementById("guessInput").value);
-    attempts++;
-    let info = document.getElementById("guessInfo");
-
-    if (guess === targetNumber) {
-        document.getElementById("guessScreen").textContent = `🎉 Correct! The number was ${targetNumber}`;
-        info.textContent = `You guessed in ${attempts} attempts`;
-        if (navigator.vibrate) navigator.vibrate([50,30,50]);
-    } else if (guess < targetNumber) {
-        document.getElementById("guessScreen").textContent = "Too low!";
-        info.textContent = `Attempts: ${attempts}`;
-        if (navigator.vibrate) navigator.vibrate(20);
-    } else if (guess > targetNumber) {
-        document.getElementById("guessScreen").textContent = "Too high!";
-        info.textContent = `Attempts: ${attempts}`;
-        if (navigator.vibrate) navigator.vibrate(20);
+function startTapGame(){gameRunning=true; tapInterval=setInterval(()=>{
+    tapTime--; tapScreen.textContent=`Time: ${tapTime}s | Score: ${tapScore}`;
+    if(tapTime<=0){clearInterval(tapInterval); gameRunning=false; tapScreen.textContent=`Time's up! Final Score: ${tapScore}`;
+        if(tapScore>highScore){highScore=tapScore; highScoreBox.textContent=`High Score: ${highScore}`;}
     }
+},1000);}
+
+/* --------------------- GUESS THE NUMBER ----------------------*/
+let targetNumber=0, attempts=0;
+function resetGuessGame(){targetNumber=Math.floor(Math.random()*100)+1; attempts=0;
+    document.getElementById("guessScreen").textContent="Enter your guess:"; document.getElementById("guessInfo").textContent="Attempts: 0";
+    document.getElementById("guessInput").value='';
+}
+function submitGuess(){
+    let guess=Number(document.getElementById("guessInput").value); attempts++;
+    let info=document.getElementById("guessInfo");
+    if(guess===targetNumber){document.getElementById("guessScreen").textContent=`🎉 Correct! The number was ${targetNumber}`; info.textContent=`You guessed in ${attempts} attempts`; navigator.vibrate&&navigator.vibrate([50,30,50]);}
+    else if(guess<targetNumber){document.getElementById("guessScreen").textContent="Too low!"; info.textContent=`Attempts: ${attempts}`; navigator.vibrate&&navigator.vibrate(20);}
+    else if(guess>targetNumber){document.getElementById("guessScreen").textContent="Too high!"; info.textContent=`Attempts: ${attempts}`; navigator.vibrate&&navigator.vibrate(20);}
+}
+
+/* --------------------- MEMORY SQUARES ----------------------*/
+let memoryGrid=document.getElementById("memoryGrid"), memorySequence=[], playerSequence=[], memoryScore=0, memoryColors=["#f44336","#2196f3","#ffeb3b","#4caf50"];
+function resetMemory(){memorySequence=[];playerSequence=[];memoryScore=0;document.getElementById("memoryInfo").textContent=`Score: 0`;setupMemoryGrid(); nextMemoryRound();}
+function setupMemoryGrid(){
+    memoryGrid.innerHTML="";
+    memoryColors.forEach((color,i)=>{
+        let div=document.createElement("div");
+        div.className="memorySquare"; div.style.background=color; div.addEventListener("click",()=>playerClick(i));
+        memoryGrid.appendChild(div);
+    });
+}
+function nextMemoryRound(){
+    let next=Math.floor(Math.random()*memoryColors.length);
+    memorySequence.push(next);
+    playSequence();
+}
+function playSequence(){
+    let i=0;
+    let squares=document.querySelectorAll(".memorySquare");
+    let interval=setInterval(()=>{
+        squares.forEach(sq=>sq.style.opacity=0.5);
+        squares[memorySequence[i]].style.opacity=1;
+        if(navigator.vibrate) navigator.vibrate(30);
+        i++;
+        if(i>=memorySequence.length){clearInterval(interval); squares.forEach(sq=>sq.style.opacity=1); playerSequence=[];}
+    },600);
+}
+function playerClick(idx){
+    playerSequence.push(idx);
+    if(playerSequence[playerSequence.length-1]!==memorySequence[playerSequence.length-1]){alert("Game Over! Score: "+memoryScore); resetMemory(); return;}
+    if(playerSequence.length===memorySequence.length){memoryScore++; document.getElementById("memoryInfo").textContent=`Score: ${memoryScore}`; setTimeout(nextMemoryRound,500);}
 }
 </script>
 
 </body>
 </html>
-
