@@ -72,11 +72,11 @@
     }
 
     /* Reaction Game */
-    #reactionGame {
+    #reactionGame, #tapGame {
         display: none;
     }
 
-    #reactionScreen {
+    #reactionScreen, #tapScreen {
         height: 200px;
         background: #333;
         color: white;
@@ -88,25 +88,61 @@
         margin-top: 20px;
         transition: background 0.3s;
     }
+
+    #tapButton {
+        width: 80%;
+        height: 80px;
+        font-size: 1.5rem;
+        margin-top: 20px;
+        border: none;
+        border-radius: 12px;
+        background: #27b54a;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        transition: transform 0.1s;
+    }
+
+    #tapButton:active {
+        transform: scale(0.95);
+    }
+
+    .info {
+        margin-top: 10px;
+    }
 </style>
 </head>
 <body>
 
+<!-- MAIN MENU -->
 <div class="container" id="menu">
     <h1>Mini Games Hub 🎮</h1>
     <p>Choose a game to play!</p>
 
     <button class="main" onclick="openReaction()">⚡ Reaction Time Test</button>
+    <button class="main" onclick="openTap()">🔥 Tap Challenge</button>
     <button class="main" disabled>🔒 More games coming…</button>
 </div>
 
-<!-- Reaction Time Game -->
+<!-- REACTION TIME GAME -->
 <div class="container" id="reactionGame">
     <h2>Reaction Time Test ⚡</h2>
     <p>Tap when the box turns green!</p>
 
     <div id="reactionScreen">Tap to Start</div>
+    <button class="main" onclick="backToMenu()">⬅ Back to Menu</button>
+</div>
 
+<!-- TAP CHALLENGE GAME -->
+<div class="container" id="tapGame">
+    <h2>Tap Challenge 🔥</h2>
+    <p>Tap the green button as many times as you can in 10 seconds!</p>
+
+    <div id="tapScreen">Time: 10s | Score: 0</div>
+    <button id="tapButton">TAP!</button>
+
+    <div class="info" id="highScore">High Score: 0</div>
     <button class="main" onclick="backToMenu()">⬅ Back to Menu</button>
 </div>
 
@@ -119,8 +155,15 @@ function openReaction() {
     document.getElementById("reactionGame").style.display = "block";
 }
 
+function openTap() {
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("tapGame").style.display = "block";
+    resetTapGame();
+}
+
 function backToMenu() {
     document.getElementById("reactionGame").style.display = "none";
+    document.getElementById("tapGame").style.display = "none";
     document.getElementById("menu").style.display = "block";
 }
 
@@ -133,7 +176,6 @@ let startTime = 0;
 
 reactionScreen.addEventListener("click", () => {
     if (!waiting) {
-        // Start waiting for green
         reactionScreen.style.background = "#b52727";
         reactionScreen.textContent = "Wait...";
         waiting = true;
@@ -144,14 +186,11 @@ reactionScreen.addEventListener("click", () => {
             reactionScreen.style.background = "#27b54a";
             reactionScreen.textContent = "TAP!";
             startTime = Date.now();
-
             if (navigator.vibrate) navigator.vibrate(60);
         }, delay);
 
     } else {
-        // Tap response
         let reaction = Date.now() - startTime;
-
         if (reaction < 50) {
             reactionScreen.textContent = "Too soon!";
             reactionScreen.style.background = "#b52727";
@@ -159,12 +198,56 @@ reactionScreen.addEventListener("click", () => {
             reactionScreen.textContent = `Your time: ${reaction} ms`;
             reactionScreen.style.background = "#222";
         }
-
         waiting = false;
     }
 });
+
+/* ---------------------
+   TAP CHALLENGE GAME
+----------------------*/
+let tapButton = document.getElementById("tapButton");
+let tapScreen = document.getElementById("tapScreen");
+let highScoreBox = document.getElementById("highScore");
+
+let tapScore = 0;
+let tapTime = 10;
+let tapInterval;
+let gameRunning = false;
+let highScore = 0;
+
+function resetTapGame() {
+    tapScore = 0;
+    tapTime = 10;
+    gameRunning = false;
+    tapScreen.textContent = `Time: 10s | Score: 0`;
+}
+
+tapButton.addEventListener("click", () => {
+    if (!gameRunning) startTapGame();
+
+    tapScore++;
+    tapScreen.textContent = `Time: ${tapTime}s | Score: ${tapScore}`;
+    if (navigator.vibrate) navigator.vibrate(20);
+});
+
+function startTapGame() {
+    gameRunning = true;
+    tapInterval = setInterval(() => {
+        tapTime -= 1;
+        tapScreen.textContent = `Time: ${tapTime}s | Score: ${tapScore}`;
+
+        if (tapTime <= 0) {
+            clearInterval(tapInterval);
+            gameRunning = false;
+            tapScreen.textContent = `Time's up! Final Score: ${tapScore}`;
+            if (tapScore > highScore) {
+                highScore = tapScore;
+                highScoreBox.textContent = `High Score: ${highScore}`;
+            }
+        }
+    }, 1000);
+}
 </script>
 
 </body>
 </html>
-
